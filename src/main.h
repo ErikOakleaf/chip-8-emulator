@@ -3,6 +3,9 @@
 #define WINDOW_WIDTH 64 * 16
 #define WINDOW_HEIGHT 32 * 16
 
+#define TARGET_FPS 60
+#define FRAME_DELAY (1000 / TARGET_FPS)
+
 unsigned char font[80] =
     {
         0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
