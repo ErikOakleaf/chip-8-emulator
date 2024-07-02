@@ -5,6 +5,7 @@
 
 // init variables
 SDL_Window *window;
+SDL_Renderer *renderer;
 
 unsigned short opcode;
 
@@ -33,7 +34,7 @@ int init_sdl(void)
     }
 
     // Create a window
-    SDL_Window *window = SDL_CreateWindow(
+    window = SDL_CreateWindow(
         "chip-8 emulator",       // Window title
         SDL_WINDOWPOS_UNDEFINED, // Initial x position
         SDL_WINDOWPOS_UNDEFINED, // Initial y position
@@ -44,6 +45,14 @@ int init_sdl(void)
     if (window == NULL)
     {
         fprintf(stderr, "Window could not be created! SDL_Error: %s\n", SDL_GetError());
+        return 1;
+    }
+
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+    if (renderer == NULL)
+    {
+        printf("Renderer could not be created! SDL_Error: %s\n", SDL_GetError());
         return 1;
     }
 }
@@ -99,14 +108,14 @@ void emulate_cycle()
     switch (opcode & 0xF000)
     {
     case 0x0000:
-        switch (opcode & 0x000F)
+        switch (nn)
         {
-        case 0x0000:
-            memset(screen, 0, 64 * 32);
+        case 0x00E0:
+            memset(screen, 0, 2048);
             drawflag = true;
             break;
 
-        case 0x000E:
+        case 0x00EE:
             --sp;
             pc = stack[sp];
             break;
@@ -115,6 +124,7 @@ void emulate_cycle()
             printf("Unknown opcode [0x0000]: 0x%X\n", opcode);
             break;
         }
+        break;
 
     case 0x1000:
         pc = nnn;
@@ -127,7 +137,7 @@ void emulate_cycle()
         break;
 
     case 0x3000:
-        if (V[x] = nn)
+        if (V[x] == nn)
             pc += 2;
         break;
 
@@ -139,14 +149,17 @@ void emulate_cycle()
     case 0x5000:
         if (V[x] == V[y])
             pc += 2;
+        break;
 
     case 0x6000:
         V[x] = nn;
+        break;
 
     case 0x7000:
         V[x] += nn;
+        break;
 
-    case 0x800:
+    case 0x8000:
         switch (opcode & 0x000F)
         {
         case 0x0000:
@@ -166,8 +179,7 @@ void emulate_cycle()
             break;
 
         case 0x0004:
-            int i = (int)(V[x]) + (int)(V[y]);
-            if (i > 255)
+            if (V[x] + V[y] > 255)
                 V[0xF] = 1;
             else
                 V[0xF] = 0;
@@ -204,6 +216,7 @@ void emulate_cycle()
             printf("Unknown opcode: 0x%X\n", opcode);
             break;
         }
+        break;
 
     case 0x9000:
         if (V[x] != V[y])
@@ -228,7 +241,7 @@ void emulate_cycle()
         V[0xF] = 0;
         for (int yline = 0; yline < n; yline++)
         {
-            pixel = memory[I = yline];
+            pixel = memory[I + yline];
             for (int xline = 0; xline < 8; xline++)
             {
                 if ((pixel & (0x80 >> xline)) != 0)
@@ -296,11 +309,9 @@ void emulate_cycle()
             break;
 
         case 0x0033:
-            memory[I] = (V[x] - (V[x] % 100)) / 100;
-            V[x] -= memory[I] * 100;
-            memory[I + 1] = (V[x] - (V[x] % 10)) / 10;
-            V[x] -= memory[I + 1] * 10;
-            memory[I + 2] = V[x];
+            memory[I] = (V[x] % 1000) / 100;
+            memory[I + 1] = (V[x] % 100) / 10;
+            memory[I + 2] = (V[x] % 10);
             break;
 
         case 0x0055:
@@ -332,6 +343,38 @@ void emulate_cycle()
     }
 }
 
+void draw()
+{
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+
+    // Draw a white rectangle
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+
+    for (int y = 0; y < 32; y++)
+    {
+        for (int x = 0; x < 64; x++)
+        {
+            if (screen[x + (y * 64)])
+            {
+                SDL_Rect rect;
+
+                rect.x = x * 16;
+                rect.y = y * 16;
+                rect.w = 16;
+                rect.h = 16;
+
+                SDL_RenderFillRect(renderer, &rect);
+            }
+        }
+    }
+
+    // SDL_Rect rect1 = {50, 50, 50, 50};
+    // SDL_RenderFillRect(renderer, &rect1);
+
+    SDL_RenderPresent(renderer);
+}
+
 int main(int argc, char *argv[])
 {
 
@@ -340,18 +383,24 @@ int main(int argc, char *argv[])
 
     // init chip 8 and load game to memory
     init_chip8();
-    load_rom("roms/1-chip8-logo.ch8");
+    load_rom("roms/test_opcode.ch8");
 
     // Emulation loop
     bool quit = false;
     SDL_Event event;
+
+    Uint32 frameStart;
+    int frameTime;
+
     while (!quit)
     {
+        frameStart = SDL_GetTicks();
 
-        // Emulate cycle
+        printf("0x%04X\n", opcode);
         emulate_cycle();
 
-        // if the draw flag is set update the screen
+        if (drawflag)
+            draw();
 
         while (SDL_PollEvent(&event) != 0)
         {
@@ -363,6 +412,12 @@ int main(int argc, char *argv[])
         }
 
         // Store key press state (Press and Release)
+
+        frameTime = SDL_GetTicks() - frameStart;
+        if (frameTime < FRAME_DELAY)
+        {
+            SDL_Delay(FRAME_DELAY - frameTime);
+        }
     }
 
     // Destroy window

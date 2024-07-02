@@ -3,3 +3,4 @@ src/include
 src/lib
 SDL2.dll
 roms
+.vscode
