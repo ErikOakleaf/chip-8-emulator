@@ -1,8 +1,0 @@
-{
-  "files.associations": {
-    "*.css": "tailwindcss",
-    "sdl.h": "c",
-    "stdbool.h": "c",
-    "stdio.h": "c"
-  }
-}
