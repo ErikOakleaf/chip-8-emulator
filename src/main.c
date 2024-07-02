@@ -103,6 +103,8 @@ void emulate_cycle()
     unsigned x = (opcode & 0x0F00) >> 8;
     unsigned y = (opcode & 0x00F0) >> 4;
 
+    printf("Executing opcode 0x%04X at PC 0x%04X\n", opcode, pc);
+
     pc += 2;
 
     switch (opcode & 0xF000)
@@ -179,12 +181,14 @@ void emulate_cycle()
             break;
 
         case 0x0004:
+        {
             if (V[x] + V[y] > 255)
                 V[0xF] = 1;
             else
                 V[0xF] = 0;
             V[x] += V[y];
             break;
+        }
 
         case 0x0005:
             if (V[x] > V[y])
@@ -195,7 +199,7 @@ void emulate_cycle()
             break;
 
         case 0x0006:
-            V[0xF] = V[x] & 0x1;
+            V[0xF] = V[x] & 1;
             V[x] >>= 1;
             break;
 
@@ -208,7 +212,7 @@ void emulate_cycle()
             break;
 
         case 0x000E:
-            V[0xF] = V[x] >> 7;
+            V[0xF] = (V[x] >> 7);
             V[x] <<= 1;
             break;
 
@@ -237,6 +241,10 @@ void emulate_cycle()
 
     case 0xD000:
     {
+        uint16_t px = V[x];
+        uint16_t py = V[y];
+        uint16_t height = n;
+
         unsigned short pixel;
         V[0xF] = 0;
         for (int yline = 0; yline < n; yline++)
@@ -246,9 +254,9 @@ void emulate_cycle()
             {
                 if ((pixel & (0x80 >> xline)) != 0)
                 {
-                    if (screen[x + xline + ((y + yline) * 64)] == 1)
+                    if (screen[px + xline + ((py + yline) * 64)] == 1)
                         V[0xF] = 1;
-                    screen[x + xline + ((y + yline) * 64)] ^= 1;
+                    screen[px + xline + ((py + yline) * 64)] ^= 1;
                 }
             }
         }
@@ -396,7 +404,6 @@ int main(int argc, char *argv[])
     {
         frameStart = SDL_GetTicks();
 
-        printf("0x%04X\n", opcode);
         emulate_cycle();
 
         if (drawflag)
