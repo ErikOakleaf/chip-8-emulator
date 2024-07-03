@@ -1,10 +1,12 @@
 #include <stdint.h>
 
-#define WINDOW_WIDTH 64 * 16
-#define WINDOW_HEIGHT 32 * 16
+#define SIZE 16
 
-#define TARGET_FPS 60
-#define FRAME_DELAY (1000 / TARGET_FPS)
+#define WINDOW_WIDTH (64 * SIZE)
+#define WINDOW_HEIGHT (32 * SIZE)
+
+#define CLOCK_RATE 540
+#define FRAME_DELAY (1000 / CLOCK_RATE)
 
 unsigned char font[80] =
     {

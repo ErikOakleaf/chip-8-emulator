@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <SDL2/SDL.h>
 #include "main.h"
 
@@ -18,7 +19,7 @@ unsigned short stack[16];
 unsigned short sp;
 
 unsigned char screen[64 * 32];
-unsigned char key[16];
+char key[16];
 
 unsigned char delay_timer;
 unsigned char sound_timer;
@@ -65,6 +66,7 @@ void init_chip8()
     pc = 0x200;
     I = 0;
     sp = 0;
+    memset(key, 0, sizeof(key));
 
     // load font of first 80 indexes in memory
     for (int i = 0; i < 80; i++)
@@ -102,8 +104,6 @@ void emulate_cycle()
     unsigned n = (opcode & 0x000F);
     unsigned x = (opcode & 0x0F00) >> 8;
     unsigned y = (opcode & 0x00F0) >> 4;
-
-    printf("Executing opcode 0x%04X at PC 0x%04X\n", opcode, pc);
 
     pc += 2;
 
@@ -291,14 +291,20 @@ void emulate_cycle()
             break;
 
         case 0x000A:
+        {
+            bool key_pressed = false;
             for (int i = 0; i < 16; i++)
             {
                 if (key[i])
                 {
+                    key_pressed = true;
                     V[x] = i;
                 }
             }
-            break;
+            if (key_pressed == false)
+                pc -= 2;
+        }
+        break;
 
         case 0x0015:
             delay_timer = V[x];
@@ -338,8 +344,10 @@ void emulate_cycle()
         printf("Unknown opcode: 0x%X\n", opcode);
         break;
     }
+}
 
-    // Update timers
+void update_timers()
+{
     if (delay_timer > 0)
         --delay_timer;
 
@@ -367,10 +375,10 @@ void draw()
             {
                 SDL_Rect rect;
 
-                rect.x = x * 16;
-                rect.y = y * 16;
-                rect.w = 16;
-                rect.h = 16;
+                rect.x = x * SIZE;
+                rect.y = y * SIZE;
+                rect.w = SIZE;
+                rect.h = SIZE;
 
                 SDL_RenderFillRect(renderer, &rect);
             }
@@ -383,6 +391,184 @@ void draw()
     SDL_RenderPresent(renderer);
 }
 
+void get_input(SDL_Event event)
+{
+    switch (event.type)
+    {
+    case SDL_KEYDOWN:
+        switch (event.key.keysym.scancode)
+        {
+        case SDL_SCANCODE_1:
+            // printf("Key pressed: 1\n");
+            key[1] = 1;
+            break;
+
+        case SDL_SCANCODE_2:
+            // printf("Key pressed: 2\n");
+            key[2] = 1;
+            break;
+
+        case SDL_SCANCODE_3:
+            // printf("Key pressed: 3\n");
+            key[3] = 1;
+            break;
+
+        case SDL_SCANCODE_4:
+            // printf("Key pressed: 4\n");
+            key[12] = 1;
+            break;
+
+        case SDL_SCANCODE_Q:
+            // printf("Key pressed: Q\n");
+            key[4] = 1;
+            break;
+
+        case SDL_SCANCODE_W:
+            // printf("Key pressed: W\n");
+            key[5] = 1;
+            break;
+
+        case SDL_SCANCODE_E:
+            // printf("Key pressed: E\n");
+            key[6] = 1;
+            break;
+
+        case SDL_SCANCODE_R:
+            // printf("Key pressed: R\n");
+            key[13] = 1;
+            break;
+
+        case SDL_SCANCODE_A:
+            // printf("Key pressed: A\n");
+            key[7] = 1;
+            break;
+
+        case SDL_SCANCODE_S:
+            // printf("Key pressed: S\n");
+            key[8] = 1;
+            break;
+
+        case SDL_SCANCODE_D:
+            // printf("Key pressed: D\n");
+            key[9] = 1;
+            break;
+
+        case SDL_SCANCODE_F:
+            // printf("Key pressed: F\n");
+            key[14] = 1;
+            break;
+
+        case SDL_SCANCODE_Z:
+            // printf("Key pressed: Z\n");
+            key[10] = 1;
+            break;
+
+        case SDL_SCANCODE_X:
+            // printf("Key pressed: X\n");
+            key[0] = 1;
+            break;
+
+        case SDL_SCANCODE_C:
+            // printf("Key pressed: C\n");
+            key[11] = 1;
+            break;
+
+        case SDL_SCANCODE_V:
+            // printf("Key pressed: V\n");
+            key[15] = 1;
+            break;
+        }
+        break;
+
+    case SDL_KEYUP:
+    {
+        switch (event.key.keysym.scancode)
+        {
+        case SDL_SCANCODE_1:
+            // printf("Key unpressed: 1\n");
+            key[1] = 0;
+            break;
+
+        case SDL_SCANCODE_2:
+            // printf("Key unpressed: 2\n");
+            key[2] = 0;
+            break;
+
+        case SDL_SCANCODE_3:
+            // printf("Key unpressed: 3\n");
+            key[3] = 0;
+            break;
+
+        case SDL_SCANCODE_4:
+            // printf("Key unpressed: 4\n");
+            key[12] = 0;
+            break;
+
+        case SDL_SCANCODE_Q:
+            // printf("Key unpressed: Q\n");
+            key[4] = 0;
+            break;
+
+        case SDL_SCANCODE_W:
+            // printf("Key unpressed: W\n");
+            key[5] = 0;
+            break;
+
+        case SDL_SCANCODE_E:
+            // printf("Key unpressed: E\n");
+            key[6] = 0;
+            break;
+
+        case SDL_SCANCODE_R:
+            // printf("Key unpressed: R\n");
+            key[13] = 0;
+            break;
+
+        case SDL_SCANCODE_A:
+            // printf("Key unpressed: A\n");
+            key[7] = 0;
+            break;
+
+        case SDL_SCANCODE_S:
+            // printf("Key unpressed: S\n");
+            key[8] = 0;
+            break;
+
+        case SDL_SCANCODE_D:
+            // printf("Key unpressed: D\n");
+            key[9] = 0;
+            break;
+
+        case SDL_SCANCODE_F:
+            // printf("Key unpressed: F\n");
+            key[14] = 0;
+            break;
+
+        case SDL_SCANCODE_Z:
+            // printf("Key unpressed: Z\n");
+            key[10] = 0;
+            break;
+
+        case SDL_SCANCODE_X:
+            // printf("Key unpressed: X\n");
+            key[0] = 0;
+            break;
+
+        case SDL_SCANCODE_C:
+            // printf("Key unpressed: C\n");
+            key[11] = 0;
+            break;
+
+        case SDL_SCANCODE_V:
+            // printf("Key unpressed: V\n");
+            key[15] = 0;
+            break;
+        }
+    }
+    break;
+    }
+}
+
 int main(int argc, char *argv[])
 {
 
@@ -391,13 +577,18 @@ int main(int argc, char *argv[])
 
     // init chip 8 and load game to memory
     init_chip8();
-    load_rom("roms/test_opcode.ch8");
+    load_rom("roms/6-keypad.ch8");
 
-    // Emulation loop
     bool quit = false;
     SDL_Event event;
 
     Uint32 frameStart;
+    Uint32 lastTimerUpdate = 0;
+    Uint32 timerUpdateInterval = 1000 / 60;
+    Uint32 frameCountStart = SDL_GetTicks();
+    int frameCount = 0;
+
+    float fps = 0;
     int frameTime;
 
     while (!quit)
@@ -411,14 +602,24 @@ int main(int argc, char *argv[])
 
         while (SDL_PollEvent(&event) != 0)
         {
-            // User requests quit
-            if (event.type == SDL_QUIT)
+            switch (event.type)
             {
+            case SDL_QUIT:
                 quit = true;
+                break;
+            case SDL_KEYDOWN:
+            case SDL_KEYUP:
+                get_input(event);
+                break;
             }
         }
 
-        // Store key press state (Press and Release)
+        Uint32 currentTime = SDL_GetTicks();
+        if (currentTime - lastTimerUpdate >= timerUpdateInterval)
+        {
+            update_timers();
+            lastTimerUpdate = currentTime;
+        }
 
         frameTime = SDL_GetTicks() - frameStart;
         if (frameTime < FRAME_DELAY)
