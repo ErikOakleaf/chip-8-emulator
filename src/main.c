@@ -2,11 +2,13 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include "main.h"
 
 // init variables
 SDL_Window *window;
 SDL_Renderer *renderer;
+TTF_Font *textFont;
 
 unsigned short opcode;
 
@@ -56,6 +58,24 @@ int init_sdl(void)
         printf("Renderer could not be created! SDL_Error: %s\n", SDL_GetError());
         return 1;
     }
+
+    if (TTF_Init() < 0)
+    {
+        printf("SDL_ttf could not initialize! TTF_Error: %s\n", TTF_GetError());
+        SDL_Quit();
+        return 1;
+    }
+
+    textFont = TTF_OpenFont("src/pixelated.ttf", 16);
+
+    if (textFont == NULL)
+    {
+        printf("Failed to load font: %s\n", TTF_GetError());
+        // Handle error (e.g., exit the program)
+        return -1;
+    }
+
+    return 0;
 }
 
 void init_chip8()
@@ -359,34 +379,74 @@ void update_timers()
     }
 }
 
+SDL_Surface *render_hex_value(char value)
+{
+    char buffer[5];
+    snprintf(buffer, sizeof(buffer), "%02X", value);
+
+    SDL_Color textColor = {255, 255, 255, 255};
+
+    return TTF_RenderText_Solid(textFont, buffer, textColor);
+}
+
 void draw()
 {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    // Draw a white rectangle
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
-    for (int y = 0; y < 32; y++)
+    // draw chip 8 screen
+
+    if (drawflag)
     {
-        for (int x = 0; x < 64; x++)
+        for (int y = 0; y < 32; y++)
         {
-            if (screen[x + (y * 64)])
+            for (int x = 0; x < 64; x++)
             {
-                SDL_Rect rect;
+                if (screen[x + (y * 64)])
+                {
+                    SDL_Rect rect;
 
-                rect.x = x * SIZE;
-                rect.y = y * SIZE;
-                rect.w = SIZE;
-                rect.h = SIZE;
+                    rect.x = x * SIZE;
+                    rect.y = y * SIZE;
+                    rect.w = SIZE;
+                    rect.h = SIZE;
 
-                SDL_RenderFillRect(renderer, &rect);
+                    SDL_RenderFillRect(renderer, &rect);
+                }
             }
         }
     }
 
-    // SDL_Rect rect1 = {50, 50, 50, 50};
-    // SDL_RenderFillRect(renderer, &rect1);
+    // draw seperation line
+
+    SDL_RenderDrawLine(renderer, (SIZE * 64), 0, (SIZE * 64), WINDOW_HEIGHT);
+
+    // draw debug info
+
+    int cell_width = 40;
+    int cell_height = 30;
+    int grid_width = 4;
+    int grid_height = 4;
+
+    int start_x = SIZE * 64 + ((SIZE * 16 - (grid_width * cell_width)) / 2);
+    int start_y = (WINDOW_HEIGHT - (grid_height * cell_height)) / 2;
+
+    for (int i = 0; i < 16; i++)
+    {
+        int row = i / 4;
+        int col = i % 4;
+
+        SDL_Surface *textSurface = render_hex_value(V[i]);
+        SDL_Texture *textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+
+        SDL_Rect textRect = {start_x + (col * cell_width) + (cell_width - textSurface->w) / 2,
+                             start_y + (row * cell_height) + (cell_height - textSurface->h) / 2,
+                             textSurface->w,
+                             textSurface->h};
+        SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+    }
 
     SDL_RenderPresent(renderer);
 }
@@ -595,11 +655,6 @@ int main(int argc, char *argv[])
     {
         frameStart = SDL_GetTicks();
 
-        emulate_cycle();
-
-        if (drawflag)
-            draw();
-
         while (SDL_PollEvent(&event) != 0)
         {
             switch (event.type)
@@ -613,6 +668,10 @@ int main(int argc, char *argv[])
                 break;
             }
         }
+
+        emulate_cycle();
+
+        draw();
 
         Uint32 currentTime = SDL_GetTicks();
         if (currentTime - lastTimerUpdate >= timerUpdateInterval)

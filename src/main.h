@@ -2,7 +2,7 @@
 
 #define SIZE 16
 
-#define WINDOW_WIDTH (64 * SIZE)
+#define WINDOW_WIDTH ((64 * SIZE) + (SIZE * 16))
 #define WINDOW_HEIGHT (32 * SIZE)
 
 #define CLOCK_RATE 540
