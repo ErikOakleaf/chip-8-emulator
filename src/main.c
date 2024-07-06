@@ -446,6 +446,8 @@ void draw()
                              textSurface->w,
                              textSurface->h};
         SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+        SDL_FreeSurface(textSurface);
+        SDL_DestroyTexture(textTexture);
     }
 
     SDL_RenderPresent(renderer);
@@ -637,7 +639,7 @@ int main(int argc, char *argv[])
 
     // init chip 8 and load game to memory
     init_chip8();
-    load_rom("roms/6-keypad.ch8");
+    load_rom("roms/Space Invaders [David Winter].ch8");
 
     bool quit = false;
     SDL_Event event;
@@ -687,10 +689,11 @@ int main(int argc, char *argv[])
         }
     }
 
-    // Destroy window
+    // cleanup
+    TTF_CloseFont(textFont);
+    TTF_Quit();
+    SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
-
-    // Quit SDL subsystems
     SDL_Quit();
 
     return 0;
