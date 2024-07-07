@@ -10,6 +10,9 @@ SDL_Window *window;
 SDL_Renderer *renderer;
 TTF_Font *textFont;
 
+SDL_Color drawColor = {0, 0, 0, 255};
+SDL_Color bgColor = {255, 255, 255, 255};
+
 typedef struct
 {
     SDL_Texture *texture;
@@ -401,17 +404,15 @@ SDL_Surface *render_hex_value(char value)
     char buffer[5];
     snprintf(buffer, sizeof(buffer), "%02X", value);
 
-    SDL_Color textColor = {255, 255, 255, 255};
-
-    return TTF_RenderText_Solid(textFont, buffer, textColor);
+    return TTF_RenderText_Solid(textFont, buffer, drawColor);
 }
 
 void draw()
 {
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a);
     SDL_RenderClear(renderer);
 
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_SetRenderDrawColor(renderer, drawColor.r, drawColor.g, drawColor.b, drawColor.a);
 
     // draw chip 8 screen
 
