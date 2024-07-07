@@ -10,6 +10,16 @@ SDL_Window *window;
 SDL_Renderer *renderer;
 TTF_Font *textFont;
 
+typedef struct
+{
+    SDL_Texture *texture;
+    SDL_Rect rect;
+    unsigned char value;
+} TextureInfo;
+
+TextureInfo v_textures[16];
+SDL_Surface *textSurface = NULL;
+
 unsigned short opcode;
 
 unsigned char memory[4096];
@@ -91,6 +101,13 @@ void init_chip8()
     // load font of first 80 indexes in memory
     for (int i = 0; i < 80; i++)
         memory[i] = font[i];
+
+    // init the values in the v_textures array
+    for (int i = 0; i < 16; i++)
+    {
+        v_textures[i].texture = NULL;
+        v_textures[i].value = 0xFF;
+    }
 }
 
 void load_rom(char *filename)
@@ -424,6 +441,7 @@ void draw()
     SDL_RenderDrawLine(renderer, (SIZE * 64), 0, (SIZE * 64), WINDOW_HEIGHT);
 
     // draw debug info
+    // TODO add texture caching - check claude. Also only update texture if the V value is changed.
 
     int cell_width = 40;
     int cell_height = 30;
@@ -438,16 +456,29 @@ void draw()
         int row = i / 4;
         int col = i % 4;
 
-        SDL_Surface *textSurface = render_hex_value(V[i]);
-        SDL_Texture *textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+        if (v_textures[i].value != V[i] || v_textures[i].texture == NULL)
+        {
 
-        SDL_Rect textRect = {start_x + (col * cell_width) + (cell_width - textSurface->w) / 2,
-                             start_y + (row * cell_height) + (cell_height - textSurface->h) / 2,
-                             textSurface->w,
-                             textSurface->h};
-        SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
-        SDL_FreeSurface(textSurface);
-        SDL_DestroyTexture(textTexture);
+            v_textures[i].value = V[i];
+
+            if (v_textures[i].texture != NULL)
+            {
+                SDL_DestroyTexture(v_textures[i].texture);
+            }
+
+            textSurface = render_hex_value(V[i]);
+            v_textures[i].texture = SDL_CreateTextureFromSurface(renderer, textSurface);
+
+            v_textures[i].rect = (SDL_Rect){start_x + (col * cell_width) + (cell_width - textSurface->w) / 2,
+                                            start_y + (row * cell_height) + (cell_height - textSurface->h) / 2,
+                                            textSurface->w,
+                                            textSurface->h};
+        }
+    }
+
+    for (int i = 0; i < 16; i++)
+    {
+        SDL_RenderCopy(renderer, v_textures[i].texture, NULL, &v_textures[i].rect);
     }
 
     SDL_RenderPresent(renderer);
@@ -673,12 +704,11 @@ int main(int argc, char *argv[])
 
         emulate_cycle();
 
-        draw();
-
         Uint32 currentTime = SDL_GetTicks();
         if (currentTime - lastTimerUpdate >= timerUpdateInterval)
         {
             update_timers();
+            draw();
             lastTimerUpdate = currentTime;
         }
 
@@ -695,6 +725,14 @@ int main(int argc, char *argv[])
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
+
+    for (int i = 0; i < 16; i++)
+    {
+        if (v_textures[i].texture != NULL)
+        {
+            SDL_DestroyTexture(v_textures[i].texture);
+        }
+    }
 
     return 0;
 }
