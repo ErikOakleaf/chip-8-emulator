@@ -10,8 +10,8 @@ SDL_Window *window;
 SDL_Renderer *renderer;
 TTF_Font *textFont;
 
-SDL_Color drawColor = {0, 0, 0, 255};
-SDL_Color bgColor = {255, 255, 255, 255};
+SDL_Color drawColor = {0, 255, 0, 255};
+SDL_Color bgColor = {0, 100, 0, 255};
 
 typedef struct
 {
@@ -485,182 +485,87 @@ void draw()
     SDL_RenderPresent(renderer);
 }
 
-void get_input(SDL_Event event)
+void get_input(const Uint8 *state)
 {
-    switch (event.type)
-    {
-    case SDL_KEYDOWN:
-        switch (event.key.keysym.scancode)
-        {
-        case SDL_SCANCODE_1:
-            // printf("Key pressed: 1\n");
-            key[1] = 1;
-            break;
+    if (state[SDL_SCANCODE_1])
+        key[1] = 1;
+    else
+        key[1] = 0;
 
-        case SDL_SCANCODE_2:
-            // printf("Key pressed: 2\n");
-            key[2] = 1;
-            break;
+    if (state[SDL_SCANCODE_2])
+        key[2] = 1;
+    else
+        key[2] = 0;
 
-        case SDL_SCANCODE_3:
-            // printf("Key pressed: 3\n");
-            key[3] = 1;
-            break;
+    if (state[SDL_SCANCODE_3])
+        key[3] = 1;
+    else
+        key[3] = 0;
 
-        case SDL_SCANCODE_4:
-            // printf("Key pressed: 4\n");
-            key[12] = 1;
-            break;
+    if (state[SDL_SCANCODE_4])
+        key[12] = 1;
+    else
+        key[12] = 0;
 
-        case SDL_SCANCODE_Q:
-            // printf("Key pressed: Q\n");
-            key[4] = 1;
-            break;
+    if (state[SDL_SCANCODE_Q])
+        key[4] = 1;
+    else
+        key[4] = 0;
 
-        case SDL_SCANCODE_W:
-            // printf("Key pressed: W\n");
-            key[5] = 1;
-            break;
+    if (state[SDL_SCANCODE_W])
+        key[5] = 1;
+    else
+        key[5] = 0;
 
-        case SDL_SCANCODE_E:
-            // printf("Key pressed: E\n");
-            key[6] = 1;
-            break;
+    if (state[SDL_SCANCODE_E])
+        key[6] = 1;
+    else
+        key[6] = 0;
 
-        case SDL_SCANCODE_R:
-            // printf("Key pressed: R\n");
-            key[13] = 1;
-            break;
+    if (state[SDL_SCANCODE_R])
+        key[13] = 1;
+    else
+        key[13] = 0;
 
-        case SDL_SCANCODE_A:
-            // printf("Key pressed: A\n");
-            key[7] = 1;
-            break;
+    if (state[SDL_SCANCODE_A])
+        key[7] = 1;
+    else
+        key[7] = 0;
 
-        case SDL_SCANCODE_S:
-            // printf("Key pressed: S\n");
-            key[8] = 1;
-            break;
+    if (state[SDL_SCANCODE_S])
+        key[8] = 1;
+    else
+        key[8] = 0;
 
-        case SDL_SCANCODE_D:
-            // printf("Key pressed: D\n");
-            key[9] = 1;
-            break;
+    if (state[SDL_SCANCODE_D])
+        key[9] = 1;
+    else
+        key[9] = 0;
 
-        case SDL_SCANCODE_F:
-            // printf("Key pressed: F\n");
-            key[14] = 1;
-            break;
+    if (state[SDL_SCANCODE_F])
+        key[14] = 1;
+    else
+        key[14] = 0;
 
-        case SDL_SCANCODE_Z:
-            // printf("Key pressed: Z\n");
-            key[10] = 1;
-            break;
+    if (state[SDL_SCANCODE_Z])
+        key[10] = 1;
+    else
+        key[10] = 0;
 
-        case SDL_SCANCODE_X:
-            // printf("Key pressed: X\n");
-            key[0] = 1;
-            break;
+    if (state[SDL_SCANCODE_X])
+        key[0] = 1;
+    else
+        key[0] = 0;
 
-        case SDL_SCANCODE_C:
-            // printf("Key pressed: C\n");
-            key[11] = 1;
-            break;
+    if (state[SDL_SCANCODE_C])
+        key[11] = 1;
+    else
+        key[11] = 0;
 
-        case SDL_SCANCODE_V:
-            // printf("Key pressed: V\n");
-            key[15] = 1;
-            break;
-        }
-        break;
-
-    case SDL_KEYUP:
-    {
-        switch (event.key.keysym.scancode)
-        {
-        case SDL_SCANCODE_1:
-            // printf("Key unpressed: 1\n");
-            key[1] = 0;
-            break;
-
-        case SDL_SCANCODE_2:
-            // printf("Key unpressed: 2\n");
-            key[2] = 0;
-            break;
-
-        case SDL_SCANCODE_3:
-            // printf("Key unpressed: 3\n");
-            key[3] = 0;
-            break;
-
-        case SDL_SCANCODE_4:
-            // printf("Key unpressed: 4\n");
-            key[12] = 0;
-            break;
-
-        case SDL_SCANCODE_Q:
-            // printf("Key unpressed: Q\n");
-            key[4] = 0;
-            break;
-
-        case SDL_SCANCODE_W:
-            // printf("Key unpressed: W\n");
-            key[5] = 0;
-            break;
-
-        case SDL_SCANCODE_E:
-            // printf("Key unpressed: E\n");
-            key[6] = 0;
-            break;
-
-        case SDL_SCANCODE_R:
-            // printf("Key unpressed: R\n");
-            key[13] = 0;
-            break;
-
-        case SDL_SCANCODE_A:
-            // printf("Key unpressed: A\n");
-            key[7] = 0;
-            break;
-
-        case SDL_SCANCODE_S:
-            // printf("Key unpressed: S\n");
-            key[8] = 0;
-            break;
-
-        case SDL_SCANCODE_D:
-            // printf("Key unpressed: D\n");
-            key[9] = 0;
-            break;
-
-        case SDL_SCANCODE_F:
-            // printf("Key unpressed: F\n");
-            key[14] = 0;
-            break;
-
-        case SDL_SCANCODE_Z:
-            // printf("Key unpressed: Z\n");
-            key[10] = 0;
-            break;
-
-        case SDL_SCANCODE_X:
-            // printf("Key unpressed: X\n");
-            key[0] = 0;
-            break;
-
-        case SDL_SCANCODE_C:
-            // printf("Key unpressed: C\n");
-            key[11] = 0;
-            break;
-
-        case SDL_SCANCODE_V:
-            // printf("Key unpressed: V\n");
-            key[15] = 0;
-            break;
-        }
-    }
-    break;
-    }
+    if (state[SDL_SCANCODE_V])
+        key[15] = 1;
+    else
+        key[15] = 0;
 }
 
 int main(int argc, char *argv[])
@@ -671,7 +576,7 @@ int main(int argc, char *argv[])
 
     // init chip 8 and load game to memory
     init_chip8();
-    load_rom("roms/Space Invaders [David Winter].ch8");
+    load_rom("roms/6-keypad.ch8");
 
     bool quit = false;
     SDL_Event event;
@@ -696,12 +601,11 @@ int main(int argc, char *argv[])
             case SDL_QUIT:
                 quit = true;
                 break;
-            case SDL_KEYDOWN:
-            case SDL_KEYUP:
-                get_input(event);
-                break;
             }
         }
+
+        const Uint8 *state = SDL_GetKeyboardState(NULL);
+        get_input(state);
 
         emulate_cycle();
 
